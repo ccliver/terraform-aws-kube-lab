@@ -43,39 +43,44 @@ resource "aws_security_group" "control_plane" {
   }
 
   ingress {
-    from_port = 6443
-    to_port   = 6443
-    protocol  = "tcp"
+    from_port       = 6443
+    to_port         = 6443
+    protocol        = "tcp"
     security_groups = [aws_security_group.workers.id]
-    self      = true
+    self            = true
+    cidr_blocks     = var.ssh_allowed_cidrs
   }
 
   ingress {
-    from_port = 2379
-    to_port   = 2380
-    protocol  = "tcp"
-    self      = true
+    from_port       = 2379
+    to_port         = 2380
+    protocol        = "tcp"
+    self            = true
+    security_groups = [aws_security_group.workers.id]
   }
 
   ingress {
-    from_port = 10250
-    to_port   = 10250
-    protocol  = "tcp"
-    self      = true
+    from_port       = 10250
+    to_port         = 10250
+    protocol        = "tcp"
+    self            = true
+    security_groups = [aws_security_group.workers.id]
   }
 
   ingress {
-    from_port = 10259
-    to_port   = 10259
-    protocol  = "tcp"
-    self      = true
+    from_port       = 10259
+    to_port         = 10259
+    protocol        = "tcp"
+    self            = true
+    security_groups = [aws_security_group.workers.id]
   }
 
   ingress {
-    from_port = 10257
-    to_port   = 10257
-    protocol  = "tcp"
-    self      = true
+    from_port       = 10257
+    to_port         = 10257
+    protocol        = "tcp"
+    self            = true
+    security_groups = [aws_security_group.workers.id]
   }
 
   egress {
@@ -99,47 +104,38 @@ resource "aws_security_group" "workers" {
 }
 
 resource "aws_security_group_rule" "ssh" {
-  type = "ingress"
-  from_port   = 22
-  to_port     = 22
-  protocol    = "tcp"
-  cidr_blocks = var.ssh_allowed_cidrs
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = var.ssh_allowed_cidrs
   security_group_id = aws_security_group.workers.id
 }
 
 resource "aws_security_group_rule" "kubelet_api_1" {
-  type = "ingress"
-  from_port = 10250
-  to_port   = 10250
-  protocol  = "tcp"
+  type                     = "ingress"
+  from_port                = 10250
+  to_port                  = 10250
+  protocol                 = "tcp"
   source_security_group_id = aws_security_group.control_plane.id
-  security_group_id = aws_security_group.workers.id
+  security_group_id        = aws_security_group.workers.id
 }
 
 resource "aws_security_group_rule" "kubelet_api_2" {
-  type = "ingress"
-  from_port = 10250
-  to_port   = 10250
-  protocol  = "tcp"
-  self      = true
+  type              = "ingress"
+  from_port         = 10250
+  to_port           = 10250
+  protocol          = "tcp"
+  self              = true
   security_group_id = aws_security_group.workers.id
 }
 
-resource "aws_security_group_rule" "nodeport_services_1" {
-  type = "ingress"
-  from_port = 30000
-  to_port   = 32767
-  protocol  = "tcp"
-  source_security_group_id = aws_security_group.control_plane.id
-  security_group_id = aws_security_group.workers.id
-}
-
-resource "aws_security_group_rule" "nodeport_services_2" {
-  type = "ingress"
-  from_port = 30000
-  to_port   = 32767
-  protocol  = "tcp"
-  self      = true
+resource "aws_security_group_rule" "nodeport_services" {
+  type              = "ingress"
+  from_port         = 30000
+  to_port           = 32767
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.workers.id
 }
 
@@ -172,7 +168,7 @@ data "aws_iam_policy_document" "instance_assume_role_policy" {
 
 data "aws_iam_policy_document" "control_plane" {
   statement {
-    actions   = [
+    actions = [
       "ssm:GetParameter",
       "ssm:PutParameter"
     ]
@@ -180,7 +176,7 @@ data "aws_iam_policy_document" "control_plane" {
   }
 
   statement {
-    actions   = [
+    actions = [
       "kms:Encrypt",
       "ssm:Decrypt"
     ]
@@ -206,7 +202,7 @@ resource "aws_iam_instance_profile" "control_plane" {
 
 data "aws_iam_policy_document" "workers" {
   statement {
-    actions   = [
+    actions = [
       "ssm:DescribeParameters",
       "ssm:GetParameter"
     ]
@@ -214,7 +210,7 @@ data "aws_iam_policy_document" "workers" {
   }
 
   statement {
-    actions   = [
+    actions = [
       "kms:Encrypt",
       "ssm:Decrypt"
     ]
@@ -244,8 +240,10 @@ resource "aws_instance" "control_plane" {
   vpc_security_group_ids = [aws_security_group.control_plane.id]
   subnet_id              = module.vpc.public_subnets[0]
   key_name               = aws_key_pair.cluster.key_name
-  user_data              = file("${path.module}/control_plane_userdata.sh")
-  iam_instance_profile   = aws_iam_instance_profile.control_plane.id
+  user_data = templatefile("${path.module}/control_plane_userdata.tpl", {
+    hostname = "${var.resource_name}-control-plane"
+  })
+  iam_instance_profile = aws_iam_instance_profile.control_plane.id
 
   tags = {
     Name = "${var.resource_name}-control-plane"
@@ -259,8 +257,10 @@ resource "aws_instance" "workers" {
   vpc_security_group_ids = [aws_security_group.workers.id]
   subnet_id              = module.vpc.public_subnets[0]
   key_name               = aws_key_pair.cluster.key_name
-  user_data              = file("${path.module}/worker_userdata.sh")
-  iam_instance_profile   = aws_iam_instance_profile.workers.id
+  user_data = templatefile("${path.module}/worker_userdata.tpl", {
+    hostname = "${var.resource_name}-worker-${count.index + 1}"
+  })
+  iam_instance_profile = aws_iam_instance_profile.workers.id
 
   tags = {
     Name = "${var.resource_name}-worker-${count.index + 1}"
