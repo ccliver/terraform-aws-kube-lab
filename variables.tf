@@ -28,7 +28,7 @@ variable "ssh_public_key" {
 }
 
 variable "ssh_allowed_cidrs" {
-  type = list
+  type        = list(any)
   description = "A list of CIDRs granted SSH access to the control plane and worker nodes"
-  default = []
+  default     = []
 }
