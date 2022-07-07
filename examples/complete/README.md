@@ -29,4 +29,5 @@ No inputs.
 | Name | Description |
 |------|-------------|
 | <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | n/a |
+| <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | n/a |
 <!-- END_TF_DOCS -->

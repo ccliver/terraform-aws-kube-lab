@@ -46,7 +46,7 @@ variable "kubernetes_version" {
 }
 
 variable "vpc_cidr" {
-  type = string
+  type        = string
   description = "VPC IP range. This should not overlap with the default for Weavenet, 10.32.0.0/12."
-  default = "172.31.0.0/16"
+  default     = "172.31.0.0/16"
 }

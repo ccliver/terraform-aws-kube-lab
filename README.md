@@ -57,6 +57,7 @@ Module to setup a Kubernetes lab in AWS using kubeadm
 | <a name="input_resource_name"></a> [resource\_name](#input\_resource\_name) | A name for various resources | `string` | `"kube-lab"` | no |
 | <a name="input_ssh_allowed_cidrs"></a> [ssh\_allowed\_cidrs](#input\_ssh\_allowed\_cidrs) | A list of CIDRs granted SSH access to the control plane and worker nodes | `list(any)` | `[]` | no |
 | <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | The SSH public key to use on the instances (will also be used to create an EC2 Key Pair) | `string` | n/a | yes |
+| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | VPC IP range. This should not overlap with the default for Weavenet, 10.32.0.0/12. | `string` | `"172.31.0.0/16"` | no |
 | <a name="input_worker_instance_type"></a> [worker\_instance\_type](#input\_worker\_instance\_type) | The instance type to use for worker nodes | `string` | `"t3.small"` | no |
 | <a name="input_worker_instances"></a> [worker\_instances](#input\_worker\_instances) | The number of worker nodes to launch | `number` | `2` | no |
 
@@ -65,4 +66,5 @@ Module to setup a Kubernetes lab in AWS using kubeadm
 | Name | Description |
 |------|-------------|
 | <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | n/a |
+| <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | n/a |
 <!-- END_TF_DOCS -->
