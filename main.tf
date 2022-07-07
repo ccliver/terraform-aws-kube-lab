@@ -48,7 +48,7 @@ resource "aws_security_group" "control_plane" {
     protocol        = "tcp"
     security_groups = [aws_security_group.workers.id]
     self            = true
-    cidr_blocks     = var.ssh_allowed_cidrs
+    cidr_blocks     = concat(var.ssh_allowed_cidrs, var.api_allowed_cidrs)
   }
 
   ingress {
@@ -153,6 +153,10 @@ resource "aws_ssm_parameter" "join_string" {
   tags = {
     Name = var.resource_name
   }
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 data "aws_iam_policy_document" "instance_assume_role_policy" {
@@ -241,7 +245,9 @@ resource "aws_instance" "control_plane" {
   subnet_id              = module.vpc.public_subnets[0]
   key_name               = aws_key_pair.cluster.key_name
   user_data = templatefile("${path.module}/control_plane_userdata.tpl", {
-    hostname = "${var.resource_name}-control-plane"
+    hostname           = "${var.resource_name}-control-plane",
+    region             = data.aws_region.current.name,
+    kubernetes_version = var.kubernetes_version
   })
   iam_instance_profile = aws_iam_instance_profile.control_plane.id
 
@@ -251,14 +257,16 @@ resource "aws_instance" "control_plane" {
 }
 
 resource "aws_instance" "workers" {
-  count                  = 2
+  count                  = var.worker_instances
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.worker_instance_type
   vpc_security_group_ids = [aws_security_group.workers.id]
   subnet_id              = module.vpc.public_subnets[0]
   key_name               = aws_key_pair.cluster.key_name
   user_data = templatefile("${path.module}/worker_userdata.tpl", {
-    hostname = "${var.resource_name}-worker-${count.index + 1}"
+    hostname           = "${var.resource_name}-worker-${count.index + 1}"
+    region             = data.aws_region.current.name,
+    kubernetes_version = var.kubernetes_version
   })
   iam_instance_profile = aws_iam_instance_profile.workers.id
 

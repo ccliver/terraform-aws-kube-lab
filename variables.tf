@@ -32,3 +32,15 @@ variable "ssh_allowed_cidrs" {
   description = "A list of CIDRs granted SSH access to the control plane and worker nodes"
   default     = []
 }
+
+variable "api_allowed_cidrs" {
+  type        = list(any)
+  description = "A list of CIDRs granted access to the control plane API"
+  default     = []
+}
+
+variable "kubernetes_version" {
+  type        = string
+  description = "The version of kubernets and associated tools to deploy"
+  default     = "1.24.2-00"
+}
