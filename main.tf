@@ -83,6 +83,15 @@ resource "aws_security_group" "control_plane" {
     security_groups = [aws_security_group.workers.id]
   }
 
+  # For weavenet
+  ingress {
+    from_port       = 6783
+    to_port         = 6783
+    protocol        = "tcp"
+    self            = true
+    security_groups = [aws_security_group.workers.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -136,6 +145,24 @@ resource "aws_security_group_rule" "nodeport_services" {
   to_port           = 32767
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.workers.id
+}
+
+resource "aws_security_group_rule" "weavenet_1" {
+  type                     = "ingress"
+  from_port                = 6783
+  to_port                  = 6783
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.control_plane.id
+  security_group_id        = aws_security_group.workers.id
+}
+
+resource "aws_security_group_rule" "weavenet_2" {
+  type              = "ingress"
+  from_port         = 6783
+  to_port           = 6783
+  protocol          = "tcp"
+  self              = true
   security_group_id = aws_security_group.workers.id
 }
 
