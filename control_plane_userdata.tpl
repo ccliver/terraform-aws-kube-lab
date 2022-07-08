@@ -41,7 +41,7 @@ apt-mark hold kubelet kubeadm kubectl
 kubeadm init
 mkdir /home/ubuntu/.kube
 cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-chown ubuntu:ubuntu /home/ubuntu/.kube/config
+chown -R ubuntu:ubuntu /home/ubuntu/.kube
 echo "export KUBECONFIG=$HOME/.kube/config" >> /etc/bash.bashrc
 echo "set -o vi" >> /etc/bash.bashrc
 
