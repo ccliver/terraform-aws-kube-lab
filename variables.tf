@@ -16,9 +16,10 @@ variable "worker_instance_type" {
   default     = "t3.small"
 }
 
+# TODO: convert to ASG
 variable "worker_instances" {
   type        = number
-  description = "The number of worker nodes to launch"
+  description = "The number of worker nodes to launch. Max 3"
   default     = 2
 }
 
@@ -49,4 +50,10 @@ variable "vpc_cidr" {
   type        = string
   description = "VPC IP range. This should not overlap with the default for Weavenet, 10.32.0.0/12."
   default     = "172.31.0.0/16"
+}
+
+variable "public_subnet_cidrs" {
+  type        = list(any)
+  description = "Subnet IP ranges."
+  default     = ["172.31.0.0/20", "172.31.16.0/20", "172.31.32.0/20"]
 }
