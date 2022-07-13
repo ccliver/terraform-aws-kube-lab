@@ -48,3 +48,10 @@ echo "set -o vi" >> /etc/bash.bashrc
 aws ssm put-parameter --region ${region} --name /kube-lab/kubeadm/join-string --value "$(kubeadm token create --print-join-command)" --overwrite
 
 kubectl apply --kubeconfig=/etc/kubernetes/admin.conf -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+echo "syntax on" > /home/ubuntu/.vimrc
+echo "set tabstop=4" >> /home/ubuntu/.vimrc
+echo "set shiftwidth=4" >> /home/ubuntu/.vimrc
+echo "set expandtab" >> /home/ubuntu/.vimrc
+echo "autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab" >> /home/ubuntu/.vimrc
+chown ubuntu:ubuntu /home/ubuntu/.vimrc

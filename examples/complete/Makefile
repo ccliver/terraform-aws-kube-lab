@@ -4,6 +4,9 @@ build: ## Deploy the lab
 	terraform init -upgrade=true
 	terraform apply -auto-approve
 
+destroy: ## Destroy the lab environment
+	terraform destroy -auto-approve
+
 ssh_control_plane: ## SSH to the public IP of the control plane
 	ssh ubuntu@$(shell terraform output -json | jq -r .control_plane_ip.value)
 
