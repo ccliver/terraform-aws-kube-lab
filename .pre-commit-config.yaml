@@ -6,6 +6,8 @@ repos:
       - id: terraform_validate
       - id: terraform_docs
         args:
+          - '--hook-config=--add-to-existing-file=true'
+        args:
           - '--args=--lockfile=false'
       - id: terraform_tflint
         args:
