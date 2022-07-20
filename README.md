@@ -1,7 +1,7 @@
 # terraform-aws-kube-lab
 Module to setup a Kubernetes lab in AWS using kubeadm
 
-<!-- BEGIN_TF_DOCS -->
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
 | Name | Version |
@@ -13,7 +13,7 @@ Module to setup a Kubernetes lab in AWS using kubeadm
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 4.20.1 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0 |
 
 ## Modules
 
@@ -68,6 +68,6 @@ Module to setup a Kubernetes lab in AWS using kubeadm
 
 | Name | Description |
 |------|-------------|
-| <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | n/a |
-| <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | n/a |
-<!-- END_TF_DOCS -->
+| <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | The control plane's IP |
+| <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | The first worker node's IP |
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

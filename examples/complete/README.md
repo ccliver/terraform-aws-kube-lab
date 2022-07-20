@@ -1,4 +1,4 @@
-<!-- BEGIN_TF_DOCS -->
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
 | Name | Version |
@@ -14,7 +14,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_kube-lab"></a> [kube-lab](#module\_kube-lab) | ../.. | n/a |
+| <a name="module_kube_lab"></a> [kube\_lab](#module\_kube\_lab) | ../.. | n/a |
 
 ## Resources
 
@@ -24,12 +24,12 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_ssh_allowed_cidrs"></a> [ssh\_allowed\_cidrs](#input\_ssh\_allowed\_cidrs) | n/a | `list(any)` | n/a | yes |
+| <a name="input_ssh_allowed_cidrs"></a> [ssh\_allowed\_cidrs](#input\_ssh\_allowed\_cidrs) | A list of CIDRs granted SSH access to the control plane and worker nodes | `list(any)` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | n/a |
-| <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | n/a |
-<!-- END_TF_DOCS -->
+| <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | The control plane's IP |
+| <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | The first worker node's IP |
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
