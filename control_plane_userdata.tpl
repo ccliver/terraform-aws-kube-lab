@@ -42,7 +42,7 @@ kubeadm init
 mkdir /home/ubuntu/.kube
 cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
 chown -R ubuntu:ubuntu /home/ubuntu/.kube
-echo "export KUBECONFIG=$HOME/.kube/config" >> /etc/bash.bashrc
+echo "export KUBECONFIG=/home/ubuntu/.kube/config" >> /etc/bash.bashrc
 echo "set -o vi" >> /etc/bash.bashrc
 
 aws ssm put-parameter --region ${region} --name /kube-lab/kubeadm/join-string --value "$(kubeadm token create --print-join-command)" --overwrite
@@ -55,3 +55,13 @@ echo "set shiftwidth=4" >> /home/ubuntu/.vimrc
 echo "set expandtab" >> /home/ubuntu/.vimrc
 echo "autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab" >> /home/ubuntu/.vimrc
 chown ubuntu:ubuntu /home/ubuntu/.vimrc
+
+curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+apt-get install apt-transport-https --yes
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+apt-get update
+apt-get install helm
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install ingress-nginx ingress-nginx/ingress-nginx
