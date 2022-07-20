@@ -177,7 +177,7 @@ resource "aws_ssm_parameter" "join_string" {
   name        = "/${var.resource_name}/kubeadm/join-string"
   description = "The command and token workers use to join the cluster"
   type        = "SecureString"
-  value       = "empty" // Populated by control plane via userdata
+  value       = "empty" # Populated by control plane via userdata
 
   tags = {
     Name = var.resource_name
