@@ -303,3 +303,57 @@ resource "aws_instance" "workers" {
     Name = "${var.resource_name}-worker-${count.index + 1}"
   }
 }
+
+resource "random_string" "random" {
+  count = var.create_etcd_backups_bucket ? 1 : 0
+
+  length  = 6
+  special = false
+  lower   = true
+  upper   = false
+}
+
+resource "aws_s3_bucket" "etcd_backups" {
+  count = var.create_etcd_backups_bucket ? 1 : 0
+
+  bucket = "etcd-backups-${random_string.random[0].result}"
+}
+
+resource "aws_s3_bucket_acl" "etcd_backups" {
+  count = var.create_etcd_backups_bucket ? 1 : 0
+
+  bucket = aws_s3_bucket.etcd_backups[0].id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_public_access_block" "etcd_backups" {
+  count = var.create_etcd_backups_bucket ? 1 : 0
+
+  bucket = aws_s3_bucket.etcd_backups[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "etcd_backups" {
+  count = var.create_etcd_backups_bucket ? 1 : 0
+
+  bucket = aws_s3_bucket.etcd_backups[0].id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "etcd_backups" {
+  count = var.create_etcd_backups_bucket ? 1 : 0
+
+  bucket = aws_s3_bucket.etcd_backups[0].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+  }
+}

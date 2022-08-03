@@ -7,3 +7,8 @@ output "worker_1_ip" {
   description = "The first worker node's IP"
   value       = module.kube_lab.worker_1_ip
 }
+
+output "etcd_backup_bucket" {
+  description = "S3 bucket to save ETCD backups to"
+  value       = module.kube_lab.etcd_backup_bucket
+}

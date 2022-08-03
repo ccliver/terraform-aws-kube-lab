@@ -35,15 +35,22 @@ apt-get install -y apt-transport-https ca-certificates curl
 curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
 apt-get update
-apt-get install -y kubelet=${kubernetes_version} kubeadm=${kubernetes_version} kubectl=${kubernetes_version}
+apt-get install -y kubelet=${kubernetes_version} kubeadm=${kubernetes_version} kubectl=${kubernetes_version} etcd-client
 apt-mark hold kubelet kubeadm kubectl
 
 kubeadm init
-mkdir /home/ubuntu/.kube
+mkdir /home/ubuntu/.kube /home/ubuntu/pki
 cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+cp /etc/kubernetes/pki/apiserver-etcd-client.* /home/ubuntu/pki/
+cp /etc/kubernetes/pki/etcd/ca.crt /home/ubuntu/pki/
 chown -R ubuntu:ubuntu /home/ubuntu/.kube
-echo "export KUBECONFIG=/home/ubuntu/.kube/config" >> /etc/bash.bashrc
-echo "set -o vi" >> /etc/bash.bashrc
+echo "export KUBECONFIG=/home/ubuntu/.kube/config" >> /home/ubuntu/.bashrc
+echo "set -o vi" >> /home/ubuntu/.bashrc
+echo "export ETCDCTL_API=3" >> /home/ubuntu/.bashrc
+echo "export ETCDCTL_CACERT=/home/ubuntu/pki/ca.crt" >> /home/ubuntu/.bashrc
+echo "export ETCDCTL_CERT=/home/ubuntu/pki/apiserver-etcd-client.crt" >> /home/ubuntu/.bashrc
+echo "export ETCDCTL_KEY=/home/ubuntu/pki/apiserver-etcd-client.key" >> /home/ubuntu/.bashrc
+chown ubuntu:ubuntu /home/ubuntu/pki/*
 
 aws ssm put-parameter --region ${region} --name /kube-lab/kubeadm/join-string --value "$(kubeadm token create --print-join-command)" --overwrite
 
