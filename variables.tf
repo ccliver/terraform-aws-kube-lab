@@ -57,3 +57,9 @@ variable "public_subnet_cidrs" {
   description = "Subnet IP ranges."
   default     = ["172.31.0.0/20", "172.31.16.0/20", "172.31.32.0/20"]
 }
+
+variable "create_etcd_backups_bucket" {
+  type        = bool
+  description = "Set this to true to create a versioned and encrypted private bucket to store ETCD backups."
+  default     = false
+}

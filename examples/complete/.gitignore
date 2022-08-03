@@ -1,1 +1,5 @@
 *.yaml
+*.key
+*.crt
+*.csr
+*.conf
