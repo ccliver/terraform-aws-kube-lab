@@ -80,4 +80,5 @@ Module to setup a Kubernetes lab in AWS using kubeadm
 | <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | The control plane's IP |
 | <a name="output_etcd_backup_bucket"></a> [etcd\_backup\_bucket](#output\_etcd\_backup\_bucket) | S3 bucket to save ETCD backups to |
 | <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | The first worker node's IP |
+| <a name="output_worker_2_ip"></a> [worker\_2\_ip](#output\_worker\_2\_ip) | The second worker node's IP |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
