@@ -62,7 +62,7 @@ Module to setup a Kubernetes lab in AWS using kubeadm
 | <a name="input_api_allowed_cidrs"></a> [api\_allowed\_cidrs](#input\_api\_allowed\_cidrs) | A list of CIDRs granted access to the control plane API | `list(any)` | `[]` | no |
 | <a name="input_control_plane_instance_type"></a> [control\_plane\_instance\_type](#input\_control\_plane\_instance\_type) | The instance type to use for control plane | `string` | `"t3.small"` | no |
 | <a name="input_create_etcd_backups_bucket"></a> [create\_etcd\_backups\_bucket](#input\_create\_etcd\_backups\_bucket) | Set this to true to create a versioned and encrypted private bucket to store ETCD backups. | `bool` | `false` | no |
-| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | The version of kubernets and associated tools to deploy | `string` | `"1.24.2-00"` | no |
+| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | The version of kubernets and associated tools to deploy | `string` | `"1.29.6-1.1"` | no |
 | <a name="input_private_subnet_cidrs"></a> [private\_subnet\_cidrs](#input\_private\_subnet\_cidrs) | Private subnet IP ranges. | `list(any)` | <pre>[<br>  "172.31.48.0/20",<br>  "172.31.64.0/20",<br>  "172.31.80.0/20"<br>]</pre> | no |
 | <a name="input_public_subnet_cidrs"></a> [public\_subnet\_cidrs](#input\_public\_subnet\_cidrs) | Public subnet IP ranges. | `list(any)` | <pre>[<br>  "172.31.0.0/20",<br>  "172.31.16.0/20",<br>  "172.31.32.0/20"<br>]</pre> | no |
 | <a name="input_resource_name"></a> [resource\_name](#input\_resource\_name) | A name for various resources | `string` | `"kube-lab"` | no |
@@ -74,7 +74,7 @@ Module to setup a Kubernetes lab in AWS using kubeadm
 
 | Name | Description |
 |------|-------------|
-| <a name="output_control_plane_ip"></a> [control\_plane\_ip](#output\_control\_plane\_ip) | The control plane's IP |
+| <a name="output_control_plane_id"></a> [control\_plane\_id](#output\_control\_plane\_id) | The control plane's instance id |
 | <a name="output_etcd_backup_bucket"></a> [etcd\_backup\_bucket](#output\_etcd\_backup\_bucket) | S3 bucket to save ETCD backups to |
 | <a name="output_worker_1_ip"></a> [worker\_1\_ip](#output\_worker\_1\_ip) | The first worker node's IP |
 | <a name="output_worker_2_ip"></a> [worker\_2\_ip](#output\_worker\_2\_ip) | The second worker node's IP |
