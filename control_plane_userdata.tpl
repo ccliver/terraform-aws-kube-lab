@@ -32,25 +32,26 @@ systemctl restart containerd
 
 apt-get update
 apt-get install -y apt-transport-https ca-certificates curl
-curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
 apt-get update
 apt-get install -y kubelet=${kubernetes_version} kubeadm=${kubernetes_version} kubectl=${kubernetes_version} etcd-client
 apt-mark hold kubelet kubeadm kubectl
 
 kubeadm init
-mkdir /home/ubuntu/.kube /home/ubuntu/pki
-cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-cp /etc/kubernetes/pki/apiserver-etcd-client.* /home/ubuntu/pki/
-cp /etc/kubernetes/pki/etcd/ca.crt /home/ubuntu/pki/
-chown -R ubuntu:ubuntu /home/ubuntu/.kube
-echo "export KUBECONFIG=/home/ubuntu/.kube/config" >> /home/ubuntu/.bashrc
-echo "set -o vi" >> /home/ubuntu/.bashrc
-echo "export ETCDCTL_API=3" >> /home/ubuntu/.bashrc
-echo "export ETCDCTL_CACERT=/home/ubuntu/pki/ca.crt" >> /home/ubuntu/.bashrc
-echo "export ETCDCTL_CERT=/home/ubuntu/pki/apiserver-etcd-client.crt" >> /home/ubuntu/.bashrc
-echo "export ETCDCTL_KEY=/home/ubuntu/pki/apiserver-etcd-client.key" >> /home/ubuntu/.bashrc
-chown ubuntu:ubuntu /home/ubuntu/pki/*
+useradd ssm-user -d /home/ssm-user
+mkdir -p /home/ssm-user/.kube /home/ssm-user/pki
+cp /etc/kubernetes/admin.conf /home/ssm-user/.kube/config
+cp /etc/kubernetes/pki/apiserver-etcd-client.* /home/ssm-user/pki/
+cp /etc/kubernetes/pki/etcd/ca.crt /home/ssm-user/pki/
+chown -R ssm-user:ssm-user /home/ssm-user/.kube
+echo "export KUBECONFIG=/home/ssm-user/.kube/config" >> /home/ssm-user/.bashrc
+echo "set -o vi" >> /home/ssm-user/.bashrc
+echo "export ETCDCTL_API=3" >> /home/ssm-user/.bashrc
+echo "export ETCDCTL_CACERT=/home/ssm-user/pki/ca.crt" >> /home/ssm-user/.bashrc
+echo "export ETCDCTL_CERT=/home/ssm-user/pki/apiserver-etcd-client.crt" >> /home/ssm-user/.bashrc
+echo "export ETCDCTL_KEY=/home/ssm-user/pki/apiserver-etcd-client.key" >> /home/ssm-user/.bashrc
+chown ubuntu:ubuntu /home/ssm-user/pki/*
 
 aws ssm put-parameter --region ${region} --name /kube-lab/kubeadm/join-string --value "$(kubeadm token create --print-join-command)" --overwrite
 
