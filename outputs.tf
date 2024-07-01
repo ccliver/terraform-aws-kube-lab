@@ -1,6 +1,6 @@
-output "control_plane_ip" {
-  description = "The control plane's IP"
-  value       = aws_instance.control_plane.public_ip
+output "control_plane_id" {
+  description = "The control plane's instance id"
+  value       = aws_instance.control_plane.id
 }
 
 output "worker_1_ip" {

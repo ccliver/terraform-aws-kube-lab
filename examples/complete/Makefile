@@ -14,17 +14,11 @@ build: ## Deploy the lab
 destroy: ## Destroy the lab environment
 	terraform destroy -auto-approve
 
-ssh_control_plane: ## SSH to the public IP of the control plane
-	ssh ubuntu@$(shell terraform output -json | jq -r .control_plane_ip.value)
-
-ssh_worker_one: ## SSH to the public IP of the first worker node
-	ssh ubuntu@$(shell terraform output -json | jq -r .worker_1_ip.value)
-
-ssh_worker_two: ## SSH to the public IP of the second worker node
-	ssh ubuntu@$(shell terraform output -json | jq -r .worker_2_ip.value)
+ssm_control_plane: ## SSH to the public IP of the control plane
+	aws ssm start-session --target $(shell terraform output -json module_outputs  | jq -r .control_plane_id) --region us-east-2
 
 backup_etcd: ## Create a backup of ETCD and copy it to the backup S3 bucket from the control plane
-	ssh ubuntu@$(shell terraform output -json | jq -r .control_plane_ip.value) "${ETCD_BACKUP_COMMAND}"
+	aws ssm start-session --target $(shell terraform output -json module_outputs  | jq -r .control_plane_id) --region us-east-2
 	scp ubuntu@$(shell terraform output -json | jq -r .control_plane_ip.value):etcd-backup-${TIMESTAMP} .
 
 help:

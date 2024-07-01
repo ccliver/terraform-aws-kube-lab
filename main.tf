@@ -10,27 +10,63 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-202*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-202*"]
   }
 
   owners = ["099720109477"] # Canonical
 }
 
+locals {
+  account_id = data.aws_caller_identity.current.account_id
+  region     = data.aws_region.current.name
+  azs        = data.aws_availability_zones.available.names
+  ami        = data.aws_ami.ubuntu.id
+}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.14.2"
+  version = "~> 5.0"
   name    = "${var.resource_name}-vpc"
   cidr    = var.vpc_cidr
   azs = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
+    local.azs[0],
+    local.azs[1],
+    local.azs[2]
   ]
-  public_subnets = var.public_subnet_cidrs
+  public_subnets             = var.public_subnet_cidrs
+  private_subnets            = var.private_subnet_cidrs
+  manage_default_network_acl = false
 
   vpc_tags = {
     Name = "${var.resource_name}-vpc"
   }
+}
+
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id              = module.vpc.vpc_id
+  service_name        = "com.amazonaws.${local.region}.ssm"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+  subnet_ids          = module.vpc.public_subnets
+  security_group_ids  = [aws_security_group.workers.id]
+}
+
+resource "aws_vpc_endpoint" "ssmmessages" {
+  vpc_id              = module.vpc.vpc_id
+  service_name        = "com.amazonaws.${local.region}.ssmmessages"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+  subnet_ids          = module.vpc.public_subnets
+  security_group_ids  = [aws_security_group.workers.id]
+}
+
+resource "aws_vpc_endpoint" "ec2messages" {
+  vpc_id              = module.vpc.vpc_id
+  service_name        = "com.amazonaws.${local.region}.ec2messages"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+  subnet_ids          = module.vpc.public_subnets
+  security_group_ids  = [aws_security_group.workers.id]
 }
 
 resource "aws_security_group" "control_plane" {
@@ -38,10 +74,10 @@ resource "aws_security_group" "control_plane" {
   vpc_id = module.vpc.vpc_id
 
   ingress {
-    from_port   = 22
-    to_port     = 22
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = var.ssh_allowed_cidrs
+    cidr_blocks = [var.vpc_cidr]
   }
 
   ingress {
@@ -50,7 +86,7 @@ resource "aws_security_group" "control_plane" {
     protocol        = "tcp"
     security_groups = [aws_security_group.workers.id]
     self            = true
-    cidr_blocks     = concat(var.ssh_allowed_cidrs, var.api_allowed_cidrs)
+    cidr_blocks     = concat(var.api_allowed_cidrs)
   }
 
   ingress {
@@ -106,6 +142,13 @@ resource "aws_security_group" "workers" {
   name   = "${var.resource_name}-workers"
   vpc_id = module.vpc.vpc_id
 
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -113,16 +156,6 @@ resource "aws_security_group" "workers" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-resource "aws_security_group_rule" "ssh" {
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  cidr_blocks       = var.ssh_allowed_cidrs
-  security_group_id = aws_security_group.workers.id
-}
-
 resource "aws_security_group_rule" "kubelet_api_1" {
   type                     = "ingress"
   from_port                = 10250
@@ -168,11 +201,6 @@ resource "aws_security_group_rule" "weavenet_2" {
   security_group_id = aws_security_group.workers.id
 }
 
-resource "aws_key_pair" "cluster" {
-  key_name   = var.resource_name
-  public_key = var.ssh_public_key
-}
-
 resource "aws_ssm_parameter" "join_string" {
   name        = "/${var.resource_name}/kubeadm/join-string"
   description = "The command and token workers use to join the cluster"
@@ -213,7 +241,7 @@ data "aws_iam_policy_document" "control_plane" {
       "kms:Encrypt",
       "ssm:Decrypt"
     ]
-    resources = ["arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"]
+    resources = ["arn:aws:kms:${local.region}:${local.account_id}:alias/aws/ssm"]
   }
 }
 
@@ -226,6 +254,8 @@ resource "aws_iam_role" "control_plane" {
     name   = "control-plane"
     policy = data.aws_iam_policy_document.control_plane.json
   }
+
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
 }
 
 resource "aws_iam_instance_profile" "control_plane" {
@@ -247,7 +277,7 @@ data "aws_iam_policy_document" "workers" {
       "kms:Encrypt",
       "ssm:Decrypt"
     ]
-    resources = ["arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"]
+    resources = ["arn:aws:kms:${local.region}:${local.account_id}:alias/aws/ssm"]
   }
 }
 
@@ -260,6 +290,8 @@ resource "aws_iam_role" "workers" {
     name   = "workers"
     policy = data.aws_iam_policy_document.workers.json
   }
+
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
 }
 
 resource "aws_iam_instance_profile" "workers" {
@@ -268,17 +300,17 @@ resource "aws_iam_instance_profile" "workers" {
 }
 
 resource "aws_instance" "control_plane" {
-  ami                    = data.aws_ami.ubuntu.id
+  ami                    = local.ami
   instance_type          = var.control_plane_instance_type
   vpc_security_group_ids = [aws_security_group.control_plane.id]
   subnet_id              = module.vpc.public_subnets[0]
-  key_name               = aws_key_pair.cluster.key_name
   user_data = templatefile("${path.module}/control_plane_userdata.tpl", {
     hostname           = "${var.resource_name}-control-plane",
-    region             = data.aws_region.current.name,
+    region             = local.region,
     kubernetes_version = var.kubernetes_version
   })
-  iam_instance_profile = aws_iam_instance_profile.control_plane.id
+  iam_instance_profile        = aws_iam_instance_profile.control_plane.id
+  associate_public_ip_address = true
 
   tags = {
     Name = "${var.resource_name}-control-plane"
@@ -287,36 +319,27 @@ resource "aws_instance" "control_plane" {
 
 resource "aws_instance" "workers" {
   count                  = var.worker_instances
-  ami                    = data.aws_ami.ubuntu.id
+  ami                    = local.ami
   instance_type          = var.worker_instance_type
   vpc_security_group_ids = [aws_security_group.workers.id]
   subnet_id              = module.vpc.public_subnets[0]
-  key_name               = aws_key_pair.cluster.key_name
   user_data = templatefile("${path.module}/worker_userdata.tpl", {
     hostname           = "${var.resource_name}-worker-${count.index + 1}"
-    region             = data.aws_region.current.name,
+    region             = local.region,
     kubernetes_version = var.kubernetes_version
   })
-  iam_instance_profile = aws_iam_instance_profile.workers.id
+  iam_instance_profile        = aws_iam_instance_profile.workers.id
+  associate_public_ip_address = true
 
   tags = {
     Name = "${var.resource_name}-worker-${count.index + 1}"
   }
 }
 
-resource "random_string" "random" {
-  count = var.create_etcd_backups_bucket ? 1 : 0
-
-  length  = 6
-  special = false
-  lower   = true
-  upper   = false
-}
-
 resource "aws_s3_bucket" "etcd_backups" {
   count = var.create_etcd_backups_bucket ? 1 : 0
 
-  bucket = "etcd-backups-${random_string.random[0].result}"
+  bucket = "etcd-backups-${uuid()}"
 }
 
 resource "aws_s3_bucket_acl" "etcd_backups" {
