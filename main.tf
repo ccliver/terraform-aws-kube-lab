@@ -342,13 +342,6 @@ resource "aws_s3_bucket" "etcd_backups" {
   bucket = "etcd-backups-${uuid()}"
 }
 
-resource "aws_s3_bucket_acl" "etcd_backups" {
-  count = var.create_etcd_backups_bucket ? 1 : 0
-
-  bucket = aws_s3_bucket.etcd_backups[0].id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_public_access_block" "etcd_backups" {
   count = var.create_etcd_backups_bucket ? 1 : 0
 
