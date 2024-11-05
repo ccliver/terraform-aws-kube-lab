@@ -1,9 +1,9 @@
 output "control_plane_id" {
   description = "The control plane's instance id"
-  value       = try(module.kubeadm[0].control_plane_id, null)
+  value       = aws_instance.control_plane.id
 }
 
 output "etcd_backup_bucket" {
   description = "S3 bucket to save ETCD backups to"
-  value       = try(module.kubeadm[0].etcd_backup_bucket, null)
+  value       = try(aws_s3_bucket.etcd_backups[0].id, null)
 }

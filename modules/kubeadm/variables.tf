@@ -1,26 +1,27 @@
+variable "vpc_id" {
+  type        = string
+  description = "VPC ID"
+}
+
 variable "app_name" {
   type        = string
   description = "A name for various resources"
-  default     = "kube-lab"
 }
 
 variable "control_plane_instance_type" {
   type        = string
   description = "The instance type to use for control plane"
-  default     = "t3.small"
 }
 
 variable "worker_instance_type" {
   type        = string
   description = "The instance type to use for worker nodes"
-  default     = "t3.small"
 }
 
 # TODO: convert to ASG
 variable "worker_instances" {
   type        = number
-  description = "The number of worker nodes to launch. Max 3"
-  default     = 2
+  description = "The number of worker nodes to launch"
 }
 
 variable "api_allowed_cidrs" {
@@ -32,41 +33,35 @@ variable "api_allowed_cidrs" {
 variable "kubernetes_version" {
   type        = string
   description = "The version of kubernets and associated tools to deploy"
-  default     = "1.31.1-1.1"
 }
 
 variable "vpc_cidr" {
   type        = string
   description = "VPC IP range. This should not overlap with the default for Weavenet, 10.32.0.0/12."
-  default     = "172.31.0.0/16"
+}
+
+variable "public_subnets" {
+  type        = list(string)
+  description = "List of public subnet ids"
+}
+
+variable "private_subnets" {
+  type        = list(string)
+  description = "List of private subnet ids"
 }
 
 variable "public_subnet_cidrs" {
   type        = list(any)
   description = "Public subnet IP ranges."
-  default     = ["172.31.0.0/20", "172.31.16.0/20", "172.31.32.0/20"]
 }
 
 variable "private_subnet_cidrs" {
   type        = list(any)
   description = "Private subnet IP ranges."
-  default     = ["172.31.48.0/20", "172.31.64.0/20", "172.31.80.0/20"]
 }
 
 variable "create_etcd_backups_bucket" {
   type        = bool
   description = "Set this to true to create a versioned and encrypted private bucket to store ETCD backups."
-  default     = false
-}
-
-variable "use_kubeadm" {
-  type        = bool
-  description = "Build cluster with kubeadm on EC2 instances"
-  default     = false
-}
-
-variable "use_eks" {
-  type        = bool
-  description = "Create a managed EKS control plane and managed node group"
   default     = false
 }
