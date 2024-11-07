@@ -1,4 +1,4 @@
-variable "resource_name" {
+variable "app_name" {
   type        = string
   description = "A name for various resources"
   default     = "kube-lab"
@@ -32,7 +32,7 @@ variable "api_allowed_cidrs" {
 variable "kubernetes_version" {
   type        = string
   description = "The version of kubernets and associated tools to deploy"
-  default     = "1.29.6-1.1"
+  default     = "1.31.1-1.1"
 }
 
 variable "vpc_cidr" {
@@ -57,4 +57,40 @@ variable "create_etcd_backups_bucket" {
   type        = bool
   description = "Set this to true to create a versioned and encrypted private bucket to store ETCD backups."
   default     = false
+}
+
+variable "use_kubeadm" {
+  type        = bool
+  description = "Build cluster with kubeadm on EC2 instances"
+  default     = false
+}
+
+variable "use_eks" {
+  type        = bool
+  description = "Create a managed EKS control plane and managed node group"
+  default     = false
+}
+
+variable "eks_min_size" {
+  type        = number
+  description = "Minimum number of workers in EKS managed node group"
+  default     = 1
+}
+
+variable "eks_max_size" {
+  type        = number
+  description = "Maximum number of workers in EKS managed node group"
+  default     = 3
+}
+
+variable "cluster_endpoint_public_access_cidrs" {
+  description = "List of CIDR blocks which can access the Amazon EKS public API server endpoint"
+  type        = list(string)
+  default     = []
+}
+
+variable "instance_types" {
+  type        = list(string)
+  description = "List of instance types to use in the managed node group"
+  default     = []
 }
