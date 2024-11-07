@@ -1,10 +1,14 @@
-locals {
-  azs = data.aws_availability_zones.available.names
-}
-
 data "aws_availability_zones" "available" {
   state = "available"
 }
+
+data "aws_region" "current" {}
+
+locals {
+  azs    = data.aws_availability_zones.available.names
+  region = data.aws_region.current.name
+}
+
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -19,6 +23,8 @@ module "vpc" {
   public_subnets             = var.public_subnet_cidrs
   private_subnets            = var.private_subnet_cidrs
   manage_default_network_acl = false
+  enable_nat_gateway         = true
+  single_nat_gateway         = false
 
   vpc_tags = {
     Name = "${var.app_name}-vpc"
@@ -38,9 +44,23 @@ module "kubeadm" {
   worker_instances            = var.worker_instances
   api_allowed_cidrs           = var.api_allowed_cidrs
   kubernetes_version          = var.kubernetes_version
-  public_subnet_cidrs         = module.vpc.public_subnets_cidr_blocks
   public_subnets              = module.vpc.public_subnets
-  private_subnet_cidrs        = module.vpc.private_subnets_cidr_blocks
-  private_subnets             = module.vpc.private_subnets
-  create_etcd_backups_bucket  = var.create_etcd_backups_bucket
+  #private_subnets             = module.vpc.private_subnets
+  create_etcd_backups_bucket = var.create_etcd_backups_bucket
+}
+
+module "eks" {
+  count = var.use_eks ? 1 : 0
+
+  source = "./modules/eks"
+
+  cluster_name                         = var.app_name
+  cluster_version                      = substr(var.kubernetes_version, 0, 4)
+  vpc_id                               = module.vpc.vpc_id
+  public_subnets                       = module.vpc.public_subnets
+  private_subnets                      = module.vpc.private_subnets
+  cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
+  min_size                             = var.eks_min_size
+  max_size                             = var.eks_max_size
+  instance_types                       = var.instance_types
 }

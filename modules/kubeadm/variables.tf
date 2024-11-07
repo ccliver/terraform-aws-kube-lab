@@ -45,20 +45,10 @@ variable "public_subnets" {
   description = "List of public subnet ids"
 }
 
-variable "private_subnets" {
-  type        = list(string)
-  description = "List of private subnet ids"
-}
-
-variable "public_subnet_cidrs" {
-  type        = list(any)
-  description = "Public subnet IP ranges."
-}
-
-variable "private_subnet_cidrs" {
-  type        = list(any)
-  description = "Private subnet IP ranges."
-}
+#variable "private_subnets" {
+#  type        = list(string)
+#  description = "List of private subnet ids"
+#}
 
 variable "create_etcd_backups_bucket" {
   type        = bool
