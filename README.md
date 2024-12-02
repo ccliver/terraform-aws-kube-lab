@@ -1,5 +1,5 @@
 # terraform-aws-kube-lab
-Module to setup a Kubernetes lab in AWS using kubeadm
+Module to setup a Kubernetes lab in AWS using kubeadm or EKS
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
