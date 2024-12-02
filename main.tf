@@ -40,13 +40,13 @@ module "kubeadm" {
   vpc_id                      = module.vpc.vpc_id
   vpc_cidr                    = var.vpc_cidr
   control_plane_instance_type = var.control_plane_instance_type
-  worker_instance_type        = var.worker_instance_type
-  worker_instances            = var.worker_instances
+  node_instance_type          = var.node_instance_type
+  node_instances              = var.node_instances
   api_allowed_cidrs           = var.api_allowed_cidrs
   kubernetes_version          = var.kubernetes_version
   public_subnets              = module.vpc.public_subnets
-  #private_subnets             = module.vpc.private_subnets
-  create_etcd_backups_bucket = var.create_etcd_backups_bucket
+  private_subnets             = module.vpc.private_subnets
+  create_etcd_backups_bucket  = var.create_etcd_backups_bucket
 }
 
 module "eks" {

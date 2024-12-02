@@ -13,15 +13,15 @@ variable "control_plane_instance_type" {
   description = "The instance type to use for control plane"
 }
 
-variable "worker_instance_type" {
+variable "node_instance_type" {
   type        = string
-  description = "The instance type to use for worker nodes"
+  description = "The instance type to use for nodes"
 }
 
 # TODO: convert to ASG
-variable "worker_instances" {
+variable "node_instances" {
   type        = number
-  description = "The number of worker nodes to launch"
+  description = "The number of nodes to launch"
 }
 
 variable "api_allowed_cidrs" {
@@ -45,10 +45,10 @@ variable "public_subnets" {
   description = "List of public subnet ids"
 }
 
-#variable "private_subnets" {
-#  type        = list(string)
-#  description = "List of private subnet ids"
-#}
+variable "private_subnets" {
+  type        = list(string)
+  description = "List of private subnet ids"
+}
 
 variable "create_etcd_backups_bucket" {
   type        = bool

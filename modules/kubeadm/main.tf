@@ -18,13 +18,32 @@ locals {
   ami        = data.aws_ami.ubuntu.id
 }
 
+resource "aws_security_group" "endpoints" {
+  name   = "${var.app_name}-endpoints"
+  vpc_id = var.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_vpc_endpoint" "ssm" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.${local.region}.ssm"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = var.public_subnets
-  security_group_ids  = [aws_security_group.workers.id]
+  security_group_ids  = [aws_security_group.endpoints.id]
 }
 
 resource "aws_vpc_endpoint" "ssmmessages" {
@@ -33,7 +52,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = var.public_subnets
-  security_group_ids  = [aws_security_group.workers.id]
+  security_group_ids  = [aws_security_group.endpoints.id]
 }
 
 resource "aws_vpc_endpoint" "ec2messages" {
@@ -42,12 +61,22 @@ resource "aws_vpc_endpoint" "ec2messages" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = var.public_subnets
-  security_group_ids  = [aws_security_group.workers.id]
+  security_group_ids  = [aws_security_group.endpoints.id]
 }
 
 resource "aws_security_group" "control_plane" {
   name   = "${var.app_name}-control-plane"
   vpc_id = var.vpc_id
+
+  dynamic "ingress" {
+    for_each = toset(var.api_allowed_cidrs)
+    content {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
+  }
 
   ingress {
     from_port   = 443
@@ -60,7 +89,7 @@ resource "aws_security_group" "control_plane" {
     from_port       = 6443
     to_port         = 6443
     protocol        = "tcp"
-    security_groups = [aws_security_group.workers.id]
+    security_groups = [aws_security_group.nodes.id]
     self            = true
     cidr_blocks     = concat(var.api_allowed_cidrs)
   }
@@ -70,7 +99,7 @@ resource "aws_security_group" "control_plane" {
     to_port         = 2380
     protocol        = "tcp"
     self            = true
-    security_groups = [aws_security_group.workers.id]
+    security_groups = [aws_security_group.nodes.id]
   }
 
   ingress {
@@ -78,7 +107,7 @@ resource "aws_security_group" "control_plane" {
     to_port         = 10250
     protocol        = "tcp"
     self            = true
-    security_groups = [aws_security_group.workers.id]
+    security_groups = [aws_security_group.nodes.id]
   }
 
   ingress {
@@ -86,7 +115,7 @@ resource "aws_security_group" "control_plane" {
     to_port         = 10259
     protocol        = "tcp"
     self            = true
-    security_groups = [aws_security_group.workers.id]
+    security_groups = [aws_security_group.nodes.id]
   }
 
   ingress {
@@ -94,7 +123,7 @@ resource "aws_security_group" "control_plane" {
     to_port         = 10257
     protocol        = "tcp"
     self            = true
-    security_groups = [aws_security_group.workers.id]
+    security_groups = [aws_security_group.nodes.id]
   }
 
   # For weavenet
@@ -103,7 +132,7 @@ resource "aws_security_group" "control_plane" {
     to_port         = 6783
     protocol        = "tcp"
     self            = true
-    security_groups = [aws_security_group.workers.id]
+    security_groups = [aws_security_group.nodes.id]
   }
 
   egress {
@@ -114,17 +143,10 @@ resource "aws_security_group" "control_plane" {
   }
 }
 
-resource "aws_security_group" "workers" {
-  name   = "${var.app_name}-workers"
+resource "aws_security_group" "nodes" {
+  name   = "${var.app_name}-nodes"
   vpc_id = var.vpc_id
 
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -132,13 +154,23 @@ resource "aws_security_group" "workers" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_security_group_rule" "node_to_node" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.nodes.id
+  security_group_id        = aws_security_group.nodes.id
+}
+
 resource "aws_security_group_rule" "kubelet_api_1" {
   type                     = "ingress"
   from_port                = 10250
   to_port                  = 10250
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.control_plane.id
-  security_group_id        = aws_security_group.workers.id
+  security_group_id        = aws_security_group.nodes.id
 }
 
 resource "aws_security_group_rule" "kubelet_api_2" {
@@ -147,7 +179,7 @@ resource "aws_security_group_rule" "kubelet_api_2" {
   to_port           = 10250
   protocol          = "tcp"
   self              = true
-  security_group_id = aws_security_group.workers.id
+  security_group_id = aws_security_group.nodes.id
 }
 
 resource "aws_security_group_rule" "nodeport_services" {
@@ -156,7 +188,7 @@ resource "aws_security_group_rule" "nodeport_services" {
   to_port           = 32767
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.workers.id
+  security_group_id = aws_security_group.nodes.id
 }
 
 resource "aws_security_group_rule" "weavenet_1" {
@@ -165,7 +197,7 @@ resource "aws_security_group_rule" "weavenet_1" {
   to_port                  = 6783
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.control_plane.id
-  security_group_id        = aws_security_group.workers.id
+  security_group_id        = aws_security_group.nodes.id
 }
 
 resource "aws_security_group_rule" "weavenet_2" {
@@ -174,12 +206,12 @@ resource "aws_security_group_rule" "weavenet_2" {
   to_port           = 6783
   protocol          = "tcp"
   self              = true
-  security_group_id = aws_security_group.workers.id
+  security_group_id = aws_security_group.nodes.id
 }
 
 resource "aws_ssm_parameter" "join_string" {
   name        = "/${var.app_name}/kubeadm/join-string"
-  description = "The command and token workers use to join the cluster"
+  description = "The command and token nodes use to join the cluster"
   type        = "SecureString"
   value       = "empty" # Populated by control plane via userdata
 
@@ -239,7 +271,7 @@ resource "aws_iam_instance_profile" "control_plane" {
   role = aws_iam_role.control_plane.name
 }
 
-data "aws_iam_policy_document" "workers" {
+data "aws_iam_policy_document" "nodes" {
   statement {
     actions = [
       "ssm:DescribeParameters",
@@ -257,22 +289,22 @@ data "aws_iam_policy_document" "workers" {
   }
 }
 
-resource "aws_iam_role" "workers" {
-  name               = "${var.app_name}-workers"
+resource "aws_iam_role" "nodes" {
+  name               = "${var.app_name}-nodes"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
 
   inline_policy {
-    name   = "workers"
-    policy = data.aws_iam_policy_document.workers.json
+    name   = "nodes"
+    policy = data.aws_iam_policy_document.nodes.json
   }
 
   managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
 }
 
-resource "aws_iam_instance_profile" "workers" {
-  name = "${var.app_name}-workers"
-  role = aws_iam_role.workers.name
+resource "aws_iam_instance_profile" "nodes" {
+  name = "${var.app_name}-nodes"
+  role = aws_iam_role.nodes.name
 }
 
 resource "aws_instance" "control_plane" {
@@ -293,23 +325,22 @@ resource "aws_instance" "control_plane" {
   }
 }
 
-resource "aws_instance" "workers" {
-  count = var.worker_instances
+resource "aws_instance" "nodes" {
+  count = var.node_instances
 
   ami                    = local.ami
-  instance_type          = var.worker_instance_type
-  vpc_security_group_ids = [aws_security_group.workers.id]
-  subnet_id              = var.public_subnets[count.index]
-  user_data = templatefile("${path.module}/worker_userdata.tpl", {
-    hostname           = "${var.app_name}-worker"
+  instance_type          = var.node_instance_type
+  vpc_security_group_ids = [aws_security_group.nodes.id]
+  subnet_id              = var.private_subnets[count.index]
+  user_data = templatefile("${path.module}/node_userdata.tpl", {
     region             = local.region,
     kubernetes_version = var.kubernetes_version
   })
-  iam_instance_profile        = aws_iam_instance_profile.workers.id
-  associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.nodes.id
+  associate_public_ip_address = false
 
   tags = {
-    Name = "${var.app_name}-worker-${count.index + 1}"
+    Name = "${var.app_name}-node-${count.index + 1}"
   }
 }
 
