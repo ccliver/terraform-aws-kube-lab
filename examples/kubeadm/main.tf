@@ -7,4 +7,5 @@ module "kube_lab" {
 
   use_kubeadm                = true
   create_etcd_backups_bucket = var.create_etcd_backups_bucket
+  api_allowed_cidrs          = var.api_allowed_cidrs
 }

@@ -10,16 +10,16 @@ variable "control_plane_instance_type" {
   default     = "t3.small"
 }
 
-variable "worker_instance_type" {
+variable "node_instance_type" {
   type        = string
-  description = "The instance type to use for worker nodes"
+  description = "The instance type to use for nodes"
   default     = "t3.small"
 }
 
 # TODO: convert to ASG
-variable "worker_instances" {
+variable "node_instances" {
   type        = number
-  description = "The number of worker nodes to launch. Max 3"
+  description = "The number of nodes to launch. Max 3"
   default     = 2
 }
 
@@ -73,13 +73,13 @@ variable "use_eks" {
 
 variable "eks_min_size" {
   type        = number
-  description = "Minimum number of workers in EKS managed node group"
+  description = "Minimum number of nodes in EKS managed node group"
   default     = 1
 }
 
 variable "eks_max_size" {
   type        = number
-  description = "Maximum number of workers in EKS managed node group"
+  description = "Maximum number of nodes in EKS managed node group"
   default     = 3
 }
 
