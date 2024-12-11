@@ -4,8 +4,8 @@ init: ## Initialize the module
 	go mod init github.com/ccliver/teraform-aws-kub-lab
 	go mod tidy
 
-test: ## Run the test
-	go test -v -timeout 30m
+test: ## Run the tests
+	go test -v -timeout 45m
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -9,7 +10,7 @@ import (
 
 func TestKubeLabKubeadm(t *testing.T) {
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "../examples/complete",
+		TerraformDir: "../examples/kubeadm",
 		Vars: map[string]interface{}{
 			"create_etcd_backups_bucket": true,
 		},
@@ -23,4 +24,21 @@ func TestKubeLabKubeadm(t *testing.T) {
 	assert.NotNil(t, output)
 	output = terraform.Output(t, terraformOptions, "etcd_backup_bucket")
 	assert.NotNil(t, output)
+}
+
+func TestKubeLabEKS(t *testing.T) {
+	appName := "eks-test"
+	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
+		TerraformDir: "../examples/eks",
+		Vars: map[string]interface{}{
+			"app_name": appName,
+		},
+	})
+
+	defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
+
+	output := terraform.Output(t, terraformOptions, "kubeconfig_command")
+	assert.Equal(t, output, fmt.Sprintf("aws eks update-kubeconfig --name %s --alias %s --region us-east-1", appName, appName))
 }

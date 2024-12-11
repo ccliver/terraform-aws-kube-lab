@@ -2,11 +2,8 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-data "aws_region" "current" {}
-
 locals {
-  azs    = data.aws_availability_zones.available.names
-  region = data.aws_region.current.name
+  azs = data.aws_availability_zones.available.names
 }
 
 
