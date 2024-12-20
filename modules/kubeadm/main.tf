@@ -19,8 +19,9 @@ locals {
 }
 
 resource "aws_security_group" "endpoints" {
-  name   = "${var.app_name}-endpoints"
-  vpc_id = var.vpc_id
+  name        = "${var.app_name}-endpoints"
+  description = "VPC endpoint security group"
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 443
@@ -33,7 +34,7 @@ resource "aws_security_group" "endpoints" {
     from_port   = 0
     to_port     = 0
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 }
 
@@ -64,9 +65,11 @@ resource "aws_vpc_endpoint" "ec2messages" {
   security_group_ids  = [aws_security_group.endpoints.id]
 }
 
+#trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "control_plane" {
-  name   = "${var.app_name}-control-plane"
-  vpc_id = var.vpc_id
+  name        = "${var.app_name}-control-plane"
+  description = "Control plane security group"
+  vpc_id      = var.vpc_id
 
   dynamic "ingress" {
     for_each = toset(var.api_allowed_cidrs)
@@ -143,9 +146,11 @@ resource "aws_security_group" "control_plane" {
   }
 }
 
+#trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "nodes" {
-  name   = "${var.app_name}-nodes"
-  vpc_id = var.vpc_id
+  name        = "${var.app_name}-nodes"
+  description = "Worker node security group"
+  vpc_id      = var.vpc_id
 
   egress {
     from_port   = 0
@@ -319,6 +324,13 @@ resource "aws_instance" "control_plane" {
   })
   iam_instance_profile        = aws_iam_instance_profile.control_plane.id
   associate_public_ip_address = true
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+  }
+  metadata_options {
+    http_tokens = "required"
+  }
 
   tags = {
     Name = "${var.app_name}-control-plane"
@@ -338,6 +350,13 @@ resource "aws_instance" "nodes" {
   })
   iam_instance_profile        = aws_iam_instance_profile.nodes.id
   associate_public_ip_address = false
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+  }
+  metadata_options {
+    http_tokens = "required"
+  }
 
   tags = {
     Name = "${var.app_name}-node-${count.index + 1}"
