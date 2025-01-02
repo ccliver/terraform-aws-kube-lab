@@ -12,3 +12,12 @@ output "etcd_backup_bucket" {
   description = "S3 bucket to save ETCD backups to"
   value       = try(aws_s3_bucket.etcd_backups[0].id, null)
 }
+
+output "kubectl_cert_data_ssm_parameters" {
+  description = "List of SSM Parameter ARNs containing cert data for kubectl config"
+  value = [
+    aws_ssm_parameter.ca_cert.arn,
+    aws_ssm_parameter.client_cert.arn,
+    aws_ssm_parameter.client_key.arn
+  ]
+}
