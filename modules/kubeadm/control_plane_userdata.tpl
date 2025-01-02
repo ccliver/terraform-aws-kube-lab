@@ -40,7 +40,7 @@ apt-get update
 apt-get install -y kubelet=${kubernetes_version} kubeadm=${kubernetes_version} kubectl=${kubernetes_version} etcd-client
 apt-mark hold kubelet kubeadm kubectl
 
-kubeadm init
+kubeadm init --apiserver-cert-extra-sans $(ec2metadata --public-ipv4)
 useradd ssm-user -d /home/ssm-user
 echo "ssm-user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ssm-agent-users
 mkdir -p /home/ssm-user/.kube /home/ssm-user/pki
@@ -80,3 +80,8 @@ apt-get install helm
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install ingress-nginx ingress-nginx/ingress-nginx
+
+wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
+aws ssm put-parameter --region ${region} --name /kube-lab/kubectl/certificate-authority-data --value "$(yq '.clusters[0].cluster.certificate-authority-data' /etc/kubernetes/admin.conf)" --overwrite
+aws ssm put-parameter --region ${region} --name /kube-lab/kubectl/client-certificate-data --value "$(yq '.users[0].user.client-certificate-data' /etc/kubernetes/admin.conf)" --overwrite
+aws ssm put-parameter --region ${region} --name /kube-lab/kubectl/client-key-data --value "$(yq '.users[0].user.client-key-data' /etc/kubernetes/admin.conf)" --overwrite

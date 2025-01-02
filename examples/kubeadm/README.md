@@ -32,5 +32,7 @@ No resources.
 | Name | Description |
 |------|-------------|
 | <a name="output_control_plane_id"></a> [control\_plane\_id](#output\_control\_plane\_id) | The control plane's instance id |
+| <a name="output_control_plane_public_endpoint"></a> [control\_plane\_public\_endpoint](#output\_control\_plane\_public\_endpoint) | The control plane's endpoint |
 | <a name="output_etcd_backup_bucket"></a> [etcd\_backup\_bucket](#output\_etcd\_backup\_bucket) | S3 bucket to save ETCD backups to |
+| <a name="output_kubectl_cert_data_ssm_parameters"></a> [kubectl\_cert\_data\_ssm\_parameters](#output\_kubectl\_cert\_data\_ssm\_parameters) | List of SSM Parameter ARNs containing cert data for kubectl config |
 <!-- END_TF_DOCS -->

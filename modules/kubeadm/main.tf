@@ -229,6 +229,39 @@ resource "aws_ssm_parameter" "join_string" {
   }
 }
 
+resource "aws_ssm_parameter" "ca_cert" {
+  name        = "/${var.app_name}/kubectl/certificate-authority-data"
+  description = "kubectl CA cert"
+  type        = "SecureString"
+  value       = "empty" # Populated by control plane via userdata
+
+  tags = {
+    Name = var.app_name
+  }
+}
+
+resource "aws_ssm_parameter" "client_cert" {
+  name        = "/${var.app_name}/kubectl/client-certificate-data"
+  description = "kubectl client cert"
+  type        = "SecureString"
+  value       = "empty" # Populated by control plane via userdata
+
+  tags = {
+    Name = var.app_name
+  }
+}
+
+resource "aws_ssm_parameter" "client_key" {
+  name        = "/${var.app_name}/kubectl/client-key-data"
+  description = "kubectl client cert"
+  type        = "SecureString"
+  value       = "empty" # Populated by control plane via userdata
+
+  tags = {
+    Name = var.app_name
+  }
+}
+
 data "aws_iam_policy_document" "instance_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -246,7 +279,12 @@ data "aws_iam_policy_document" "control_plane" {
       "ssm:GetParameter",
       "ssm:PutParameter"
     ]
-    resources = [aws_ssm_parameter.join_string.arn]
+    resources = [
+      aws_ssm_parameter.join_string.arn,
+      aws_ssm_parameter.ca_cert.arn,
+      aws_ssm_parameter.client_cert.arn,
+      aws_ssm_parameter.client_key.arn
+    ]
   }
 
   statement {
