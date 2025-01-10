@@ -1,5 +1,6 @@
-# terraform-aws-kube-lab
-Module to setup a Kubernetes lab in AWS using kubeadm or EKS
+# Module to setup a Kubernetes lab in AWS using kubeadm or EKS
+
+[![pre-commit-terraform](https://github.com/ccliver/terraform-aws-kube-lab/actions/workflows/pr-check.yml/badge.svg)](https://github.com/ccliver/terraform-aws-kube-lab/actions/workflows/pr-check.yml)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
