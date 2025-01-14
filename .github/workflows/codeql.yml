@@ -1,0 +1,16 @@
+name: pre-commit-terraform
+
+on:
+  push:
+
+jobs:
+  codeql:
+    name: codeql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Init CodeQL
+        uses: github/codeql-action/init@v2
+      - name: Analyze code
+        uses: github/codeql-action/analyze@v2
