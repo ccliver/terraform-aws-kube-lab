@@ -18,10 +18,14 @@ variable "node_instance_type" {
   description = "The instance type to use for nodes"
 }
 
-# TODO: convert to ASG
-variable "node_instances" {
+variable "max_node_instances" {
   type        = number
-  description = "The number of nodes to launch"
+  description = "The maximum number of nodes to launch"
+}
+
+variable "min_node_instances" {
+  type        = number
+  description = "The minimum number of nodes to launch"
 }
 
 variable "api_allowed_cidrs" {

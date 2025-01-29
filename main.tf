@@ -38,7 +38,8 @@ module "kubeadm" {
   vpc_cidr                    = var.vpc_cidr
   control_plane_instance_type = var.control_plane_instance_type
   node_instance_type          = var.node_instance_type
-  node_instances              = var.node_instances
+  max_node_instances          = var.max_node_instances
+  min_node_instances          = var.min_node_instances
   api_allowed_cidrs           = var.api_allowed_cidrs
   kubernetes_version          = var.kubernetes_version
   public_subnets              = module.vpc.public_subnets

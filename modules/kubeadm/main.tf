@@ -375,29 +375,79 @@ resource "aws_instance" "control_plane" {
   }
 }
 
-resource "aws_instance" "nodes" {
-  count = var.node_instances
+resource "aws_launch_template" "nodes" {
+  name = "${var.app_name}-nodes"
 
-  ami                    = local.ami
-  instance_type          = var.node_instance_type
-  vpc_security_group_ids = [aws_security_group.nodes.id]
-  subnet_id              = var.private_subnets[count.index]
-  user_data = templatefile("${path.module}/node_userdata.tpl", {
+  capacity_reservation_specification {
+    capacity_reservation_preference = "none"
+  }
+
+  credit_specification {
+    cpu_credits = "standard"
+  }
+
+  disable_api_stop        = false
+  disable_api_termination = false
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.nodes.name
+  }
+
+  image_id                             = local.ami
+  instance_initiated_shutdown_behavior = "terminate"
+
+  instance_market_options {
+    market_type = "spot"
+  }
+
+  instance_type = var.node_instance_type
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "enabled"
+  }
+
+  monitoring {
+    enabled = true
+  }
+
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups             = [aws_security_group.nodes.id]
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "${var.app_name}-node"
+    }
+  }
+
+  user_data = base64encode(templatefile("${path.module}/node_userdata.tpl", {
     region             = local.region,
     kubernetes_version = var.kubernetes_version
-  })
-  iam_instance_profile        = aws_iam_instance_profile.nodes.id
-  associate_public_ip_address = false
-  root_block_device {
-    delete_on_termination = true
-    encrypted             = true
-  }
-  metadata_options {
-    http_tokens = "required"
+  }))
+}
+
+resource "aws_autoscaling_group" "bar" {
+  name                      = "${var.app_name}-nodes"
+  max_size                  = var.max_node_instances
+  min_size                  = var.min_node_instances
+  desired_capacity          = var.min_node_instances
+  health_check_grace_period = 60
+  health_check_type         = "EC2"
+  force_delete              = true
+  vpc_zone_identifier       = var.private_subnets
+  launch_template {
+    id      = aws_launch_template.nodes.id
+    version = "$Latest"
   }
 
-  tags = {
-    Name = "${var.app_name}-node-${count.index + 1}"
+  timeouts {
+    delete = "10m"
   }
 }
 
