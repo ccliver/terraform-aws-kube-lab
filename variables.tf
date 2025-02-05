@@ -7,20 +7,25 @@ variable "app_name" {
 variable "control_plane_instance_type" {
   type        = string
   description = "The instance type to use for control plane"
-  default     = "t3.small"
+  default     = "t3a.small"
 }
 
 variable "node_instance_type" {
   type        = string
   description = "The instance type to use for nodes"
-  default     = "t3.small"
+  default     = "t3a.small"
 }
 
-# TODO: convert to ASG
-variable "node_instances" {
+variable "max_node_instances" {
   type        = number
-  description = "The number of nodes to launch. Max 3"
-  default     = 2
+  description = "The maximum number of nodes to launch"
+  default     = 3
+}
+
+variable "min_node_instances" {
+  type        = number
+  description = "The minimum number of nodes to launch"
+  default     = 1
 }
 
 variable "api_allowed_cidrs" {
