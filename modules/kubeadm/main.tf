@@ -300,13 +300,17 @@ resource "aws_iam_role" "control_plane" {
   name               = "${var.app_name}-control-plane"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
+}
 
-  inline_policy {
-    name   = "control-plane"
-    policy = data.aws_iam_policy_document.control_plane.json
-  }
+resource "aws_iam_role_policy" "control_plane" {
+  name   = "control-plane"
+  role   = aws_iam_role.control_plane.name
+  policy = data.aws_iam_policy_document.control_plane.json
+}
 
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
+resource "aws_iam_role_policy_attachment" "control_plane" {
+  role       = aws_iam_role.control_plane.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "control_plane" {
@@ -336,13 +340,17 @@ resource "aws_iam_role" "nodes" {
   name               = "${var.app_name}-nodes"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
+}
 
-  inline_policy {
-    name   = "nodes"
-    policy = data.aws_iam_policy_document.nodes.json
-  }
+resource "aws_iam_role_policy" "nodes" {
+  name   = "nodes"
+  role   = aws_iam_role.nodes.name
+  policy = data.aws_iam_policy_document.nodes.json
+}
 
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
+resource "aws_iam_role_policy_attachment" "nodes" {
+  role       = aws_iam_role.nodes.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "nodes" {

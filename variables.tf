@@ -19,11 +19,13 @@ variable "node_instance_type" {
 variable "max_node_instances" {
   type        = number
   description = "The maximum number of nodes to launch"
+  default     = 3
 }
 
 variable "min_node_instances" {
   type        = number
   description = "The minimum number of nodes to launch"
+  default     = 1
 }
 
 variable "api_allowed_cidrs" {
