@@ -1,0 +1,43 @@
+version: '3'
+
+vars:
+  REGION: us-east-1
+
+tasks:
+  default:
+    silent: true
+    cmd: task -l
+
+  build:
+    desc: Deploy the lab
+    cmds:
+      - terraform init -upgrade=true
+      - terraform apply -auto-approve
+
+  destroy:
+    desc: Destroy the lab
+    cmd: terraform destroy -auto-approve
+
+  ssm-control-plane:
+    desc: Open shell on the control plane instance
+    cmd: aws ssm start-session --target $(terraform output -json | jq -r .control_plane_id.value) --region {{.REGION}}
+
+  get-control-plane-endpoint:
+    desc: Print the endpoint for the public control plane
+    silent: true
+    cmd: terraform output -raw control_plane_public_endpoint
+
+  get-ca-cert:
+    desc: Print kubectl CA cert
+    silent: true
+    cmd: aws ssm get-parameter --region {{.REGION}} --name $(terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[0]) --with-decryption | jq -r .Parameter.Value
+
+  get-client-cert:
+    desc: Print kubectl client cert
+    silent: true
+    cmd: aws ssm get-parameter --region {{.REGION}} --name $(terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[1]) --with-decryption | jq -r .Parameter.Value
+
+  get-client-key:
+    desc: Print kubectl client key
+    silent: true
+    cmd: aws ssm get-parameter --region {{.REGION}} --name $(terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[2]) --with-decryption | jq -r .Parameter.Value

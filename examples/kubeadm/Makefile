@@ -1,11 +1,5 @@
 .DEFAULT_GOAL := help
 
-TIMESTAMP := $(shell date +%s)
-ETCD_BACKUP_COMMAND := ETCDCTL_KEY=/home/ubuntu/pki/apiserver-etcd-client.key \
-	ETCDCTL_API=3 \
-	ETCDCTL_CACERT=/home/ubuntu/pki/ca.crt \
-	ETCDCTL_CERT=/home/ubuntu/pki/apiserver-etcd-client.crt \
-	etcdctl snapshot save ./etcd-backup-${TIMESTAMP}
 
 build: ## Deploy the lab
 	terraform init -upgrade=true
@@ -15,20 +9,16 @@ destroy: ## Destroy the lab environment
 	terraform destroy -auto-approve
 
 ssm_control_plane: ## SSH to the public IP of the control plane
-	aws ssm start-session --target $(shell terraform output -json | jq -r .control_plane_id.value) --region us-east-2
-
-backup_etcd: ## Create a backup of ETCD and copy it to the backup S3 bucket from the control plane
-	aws ssm start-session --target $(shell terraform output -json | jq -r .control_plane_id.value) --region us-east-2
-	scp ubuntu@$(shell terraform output -json | jq -r .control_plane_ip.value):etcd-backup-${TIMESTAMP} .
+	aws ssm start-session --target $(shell terraform output -json | jq -r .control_plane_id.value) --region us-east-1
 
 get_ca_cert: ## Print kubectl CA cert
-	@aws ssm get-parameter --region us-east-2 --name $(shell terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[0]) --with-decryption | jq -r .Parameter.Value
+	@aws ssm get-parameter --region us-east-1 --name $(shell terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[0]) --with-decryption | jq -r .Parameter.Value
 
 get_client_cert: ## Print kubectl client cert
-	@aws ssm get-parameter --region us-east-2 --name $(shell terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[1]) --with-decryption | jq -r .Parameter.Value
+	@aws ssm get-parameter --region us-east-1 --name $(shell terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[1]) --with-decryption | jq -r .Parameter.Value
 
 get_client_key: ## Print kubectl client key
-	@aws ssm get-parameter --region us-east-2 --name $(shell terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[2]) --with-decryption | jq -r .Parameter.Value
+	@aws ssm get-parameter --region us-east-1 --name $(shell terraform output -json | jq -r .kubectl_cert_data_ssm_parameters.value[2]) --with-decryption | jq -r .Parameter.Value
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
