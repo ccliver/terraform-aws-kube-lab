@@ -1,0 +1,15 @@
+{
+  "branches": [
+    "main",
+    "test/release"
+  ],
+  "ci": false,
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits"
+      }
+    ]
+  ]
+}
