@@ -1,24 +1,28 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.28.0"
+  version = "21.0.8"
 
-  cluster_name    = var.cluster_name
-  cluster_version = var.cluster_version
+  name               = var.name
+  kubernetes_version = var.kubernetes_version
 
   # EKS Addons
-  cluster_addons = {
-    coredns                = {}
-    eks-pod-identity-agent = {}
-    kube-proxy             = {}
-    vpc-cni                = {}
+  addons = {
+    coredns = {}
+    eks-pod-identity-agent = {
+      before_compute = true
+    }
+    kube-proxy = {}
+    vpc-cni = {
+      before_compute = true
+    }
   }
 
   vpc_id                                   = var.vpc_id
-  control_plane_subnet_ids                 = var.public_subnets
-  cluster_endpoint_public_access           = true
-  cluster_endpoint_public_access_cidrs     = var.cluster_endpoint_public_access_cidrs
-  enable_cluster_creator_admin_permissions = true
   subnet_ids                               = var.private_subnets
+  control_plane_subnet_ids                 = var.public_subnets
+  endpoint_public_access                   = true
+  endpoint_public_access_cidrs             = var.endpoint_public_access_cidrs
+  enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
     default = {
@@ -50,5 +54,10 @@ module "eks" {
       cidr_blocks      = ["0.0.0.0/0"]
       ipv6_cidr_blocks = ["::/0"]
     }
+  }
+
+  tags = {
+    Environment = "terraform-aws-kube-lab"
+    Terraform   = "true"
   }
 }

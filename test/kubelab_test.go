@@ -2,16 +2,20 @@ package test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestKubeLabKubeadm(t *testing.T) {
+	appName := fmt.Sprintf("%s-%s", "kubeadm-test", strings.ToLower(random.UniqueId()))
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "../examples/kubeadm",
 		Vars: map[string]interface{}{
+			"app_name":                   appName,
 			"create_etcd_backups_bucket": true,
 		},
 	})
@@ -27,7 +31,7 @@ func TestKubeLabKubeadm(t *testing.T) {
 }
 
 func TestKubeLabEKS(t *testing.T) {
-	appName := "eks-test"
+	appName := fmt.Sprintf("%s-%s", "eks-test", strings.ToLower(random.UniqueId()))
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "../examples/eks",
 		Vars: map[string]interface{}{

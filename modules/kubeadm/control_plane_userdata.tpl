@@ -25,19 +25,22 @@ sysctl --system
 
 sleep 30 # wait for network
 apt-get update
-apt-get install -y awscli yamllint jq containerd
+apt-get install -y curl yamllint containerd unzip
+curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+./aws/install
 
 mkdir /etc/containerd
 containerd config default > /etc/containerd/config.toml
 sed -i.bak 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 systemctl restart containerd
 
-apt-get install -y apt-transport-https ca-certificates curl gpg
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --no-tty --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+apt-get install -y apt-transport-https ca-certificates gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v${kubernetes_version}/deb/Release.key | gpg --no-tty --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${kubernetes_version}/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
 
 apt-get update
-apt-get install -y kubelet=${kubernetes_version} kubeadm=${kubernetes_version} kubectl=${kubernetes_version} etcd-client
+apt-get install -y kubelet=${kubernetes_version_full} kubeadm=${kubernetes_version_full} kubectl=${kubernetes_version_full} etcd-client
 apt-mark hold kubelet kubeadm kubectl
 
 kubeadm init --apiserver-cert-extra-sans $(ec2metadata --public-ipv4)
@@ -81,7 +84,12 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install ingress-nginx ingress-nginx/ingress-nginx
 
-wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
-aws ssm put-parameter --region ${region} --name /kube-lab/kubectl/certificate-authority-data --value "$(yq '.clusters[0].cluster.certificate-authority-data' /etc/kubernetes/admin.conf)" --overwrite
-aws ssm put-parameter --region ${region} --name /kube-lab/kubectl/client-certificate-data --value "$(yq '.users[0].user.client-certificate-data' /etc/kubernetes/admin.conf)" --overwrite
-aws ssm put-parameter --region ${region} --name /kube-lab/kubectl/client-key-data --value "$(yq '.users[0].user.client-key-data' /etc/kubernetes/admin.conf)" --overwrite
+aws ssm put-parameter --region ${region} \
+    --name /kube-lab/kubectl/certificate-authority-data \
+    --value "$(grep certificate-authority-data /etc/kubernetes/admin.conf  | awk -F': ' '{print $2}')" --overwrite
+aws ssm put-parameter --region ${region} \
+    --name /kube-lab/kubectl/client-certificate-data \
+    --value "$(grep client-certificate-data /etc/kubernetes/admin.conf  | awk -F': ' '{print $2}')" --overwrite
+aws ssm put-parameter --region ${region} \
+    --name /kube-lab/kubectl/client-key-data \
+    --value "$(grep client-key-data /etc/kubernetes/admin.conf  | awk -F': ' '{print $2}')" --overwrite

@@ -36,8 +36,8 @@ variable "api_allowed_cidrs" {
 
 variable "kubernetes_version" {
   type        = string
-  description = "The version of kubernets and associated tools to deploy"
-  default     = "1.31.1-1.1"
+  description = "The version of Kubernetes and associated tools to deploy"
+  default     = "1.33.0-1.1"
 }
 
 variable "vpc_cidr" {
@@ -88,7 +88,7 @@ variable "eks_max_size" {
   default     = 3
 }
 
-variable "cluster_endpoint_public_access_cidrs" {
+variable "endpoint_public_access_cidrs" {
   description = "List of CIDR blocks which can access the Amazon EKS public API server endpoint"
   type        = list(string)
   default     = []
@@ -98,4 +98,10 @@ variable "instance_types" {
   type        = list(string)
   description = "List of instance types to use in the managed node group"
   default     = []
+}
+
+variable "ubuntu_version" {
+  type        = string
+  description = "Image location: `aws ec2 describe-images --region us-east-1 --owners 099720109477`"
+  default     = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-202*"
 }

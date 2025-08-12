@@ -9,7 +9,7 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  version = "~> 6.0"
   name    = "${var.app_name}-vpc"
   cidr    = var.vpc_cidr
   azs = [
@@ -45,6 +45,7 @@ module "kubeadm" {
   public_subnets              = module.vpc.public_subnets
   private_subnets             = module.vpc.private_subnets
   create_etcd_backups_bucket  = var.create_etcd_backups_bucket
+  ubuntu_version              = var.ubuntu_version
 }
 
 module "eks" {
@@ -52,13 +53,13 @@ module "eks" {
 
   source = "./modules/eks"
 
-  cluster_name                         = var.app_name
-  cluster_version                      = substr(var.kubernetes_version, 0, 4)
-  vpc_id                               = module.vpc.vpc_id
-  public_subnets                       = module.vpc.public_subnets
-  private_subnets                      = module.vpc.private_subnets
-  cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
-  min_size                             = var.eks_min_size
-  max_size                             = var.eks_max_size
-  instance_types                       = var.instance_types
+  name                         = var.app_name
+  kubernetes_version           = substr(var.kubernetes_version, 0, 4)
+  vpc_id                       = module.vpc.vpc_id
+  public_subnets               = module.vpc.public_subnets
+  private_subnets              = module.vpc.private_subnets
+  endpoint_public_access_cidrs = var.endpoint_public_access_cidrs
+  min_size                     = var.eks_min_size
+  max_size                     = var.eks_max_size
+  instance_types               = var.instance_types
 }

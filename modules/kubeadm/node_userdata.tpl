@@ -23,7 +23,10 @@ sysctl --system
 
 sleep 30 # wait for network
 apt-get update
-apt-get install -y awscli yamllint jq containerd
+apt-get install -y curl yamllint jq containerd unzip
+curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+./aws/install
 
 mkdir /etc/containerd
 containerd config default > /etc/containerd/config.toml
@@ -31,10 +34,10 @@ sed -i.bak 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/confi
 systemctl restart containerd
 
 apt-get install -y apt-transport-https ca-certificates curl gpg
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --no-tty --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v${kubernetes_version}/deb/Release.key | gpg --no-tty --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${kubernetes_version}/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
 apt-get update
-apt-get install -y kubelet=${kubernetes_version} kubeadm=${kubernetes_version} kubectl=${kubernetes_version}
+apt-get install -y kubelet=${kubernetes_version_full} kubeadm=${kubernetes_version_full} kubectl=${kubernetes_version_full}
 apt-mark hold kubelet kubeadm kubectl
 
 sleep 120 # Give kubeadm time to setup the cluster

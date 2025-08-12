@@ -13,12 +13,12 @@ variable "private_subnets" {
   description = "List of private subnet ids"
 }
 
-variable "cluster_name" {
+variable "name" {
   description = "Name of the EKS cluster"
   type        = string
 }
 
-variable "cluster_version" {
+variable "kubernetes_version" {
   description = "Kubernetes `<major>.<minor>` version to use for the EKS cluster (i.e.: `1.27`)"
   type        = string
   default     = null
@@ -36,7 +36,7 @@ variable "max_size" {
   default     = 3
 }
 
-variable "cluster_endpoint_public_access_cidrs" {
+variable "endpoint_public_access_cidrs" {
   type        = list(string)
   description = "List of CIDR blocks which can access the Amazon EKS public API server endpoint"
   default     = []

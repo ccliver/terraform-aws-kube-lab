@@ -59,3 +59,8 @@ variable "create_etcd_backups_bucket" {
   description = "Set this to true to create a versioned and encrypted private bucket to store ETCD backups."
   default     = false
 }
+
+variable "ubuntu_version" {
+  type        = string
+  description = "Image location: `aws ec2 describe-images --region us-east-1 --owners 099720109477`"
+}
