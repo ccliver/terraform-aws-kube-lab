@@ -1,3 +1,9 @@
+variable "app_name" {
+  type        = string
+  description = "A name for various resources"
+  default     = "kube-lab"
+}
+
 variable "create_etcd_backups_bucket" {
   type        = bool
   description = "Set this to true to create a versioned and encrypted private bucket to store ETCD backups."

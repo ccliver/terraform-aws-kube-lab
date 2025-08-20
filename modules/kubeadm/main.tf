@@ -6,7 +6,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-202*"]
+    values = [var.ubuntu_version]
   }
 
   owners = ["099720109477"] # Canonical
@@ -14,7 +14,7 @@ data "aws_ami" "ubuntu" {
 
 locals {
   account_id = data.aws_caller_identity.current.account_id
-  region     = data.aws_region.current.name
+  region     = data.aws_region.current.region
   ami        = data.aws_ami.ubuntu.id
 }
 
@@ -364,9 +364,10 @@ resource "aws_instance" "control_plane" {
   vpc_security_group_ids = [aws_security_group.control_plane.id]
   subnet_id              = var.public_subnets[0]
   user_data = templatefile("${path.module}/control_plane_userdata.tpl", {
-    hostname           = "${var.app_name}-control-plane",
-    region             = local.region,
-    kubernetes_version = var.kubernetes_version
+    hostname                = "${var.app_name}-control-plane",
+    region                  = local.region,
+    kubernetes_version      = substr(var.kubernetes_version, 0, 4)
+    kubernetes_version_full = var.kubernetes_version
   })
   iam_instance_profile        = aws_iam_instance_profile.control_plane.id
   associate_public_ip_address = true
@@ -379,7 +380,8 @@ resource "aws_instance" "control_plane" {
   }
 
   tags = {
-    Name = "${var.app_name}-control-plane"
+    Name        = "${var.app_name}-control-plane"
+    Environment = "terraform-aws-kube-lab"
   }
 }
 
@@ -435,8 +437,9 @@ resource "aws_launch_template" "nodes" {
   }
 
   user_data = base64encode(templatefile("${path.module}/node_userdata.tpl", {
-    region             = local.region,
-    kubernetes_version = var.kubernetes_version
+    region                  = local.region,
+    kubernetes_version      = substr(var.kubernetes_version, 0, 4)
+    kubernetes_version_full = var.kubernetes_version
   }))
 }
 
@@ -456,6 +459,12 @@ resource "aws_autoscaling_group" "bar" {
 
   timeouts {
     delete = "10m"
+  }
+
+  tag {
+    key                 = "Environment"
+    value               = "terraform-aws-kube-lab"
+    propagate_at_launch = true
   }
 }
 
