@@ -74,12 +74,9 @@ tar xzvfC cilium-linux-$${CLI_ARCH}.tar.gz /usr/local/bin
 rm cilium-linux-$${CLI_ARCH}.tar.gz{,.sha256sum}
 sudo -u ssm-user cilium install
 
-curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
-apt-get install apt-transport-https --yes
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
-apt-get update
-apt-get install helm
-
+curl -O https://get.helm.sh/helm-v3.19.0-linux-amd64.tar.gz
+tar xzf helm-v3.19.0-linux-amd64.tar.gz
+cp linux-amd64/helm /usr/local/bin
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install ingress-nginx ingress-nginx/ingress-nginx
